@@ -1,0 +1,198 @@
+<div class="users-page">
+  <div class="page-header">
+    <h1>User Management</h1>
+    <p class="subtitle">Manage and monitor user accounts</p>
+  </div>
+
+  <app-loading-spinner *ngIf="loading" message="Loading users..."></app-loading-spinner>
+
+  <div *ngIf="!loading" class="users-content">
+    <div class="users-actions">
+      <app-button type="primary" (clicked)="onAddUser()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add User
+      </app-button>
+    </div>
+
+    <app-card padding="none">
+      <div class="users-table">
+        <div class="table-header">
+          <div class="header-cell">User</div>
+          <div class="header-cell">Email</div>
+          <div class="header-cell">Role</div>
+          <div class="header-cell">Status</div>
+          <div class="header-cell">Joined</div>
+          <div class="header-cell">Actions</div>
+        </div>
+
+        <div class="table-body">
+          <div 
+            *ngFor="let user of users" 
+            class="table-row"
+            [class.selected]="selectedUser?.id === user.id"
+            (click)="onUserClick(user)"
+          >
+            <div class="table-cell user-cell">
+              <img [src]="user.avatar" [alt]="user.name" class="user-avatar" />
+              <span class="user-name">{{ user.name }}</span>
+            </div>
+            <div class="table-cell">{{ user.email }}</div>
+            <div class="table-cell">
+              <span class="role-badge">{{ user.role }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="status-badge" [style.background-color]="getStatusColor(user.status)">
+                {{ getStatusLabel(user.status) }}
+              </span>
+            </div>
+            <div class="table-cell">{{ user.joinedDate | dateFormat:'short' }}</div>
+            <div class="table-cell actions-cell">
+              <button class="action-btn" title="Edit" (click)="onEditUser(user, $event)">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button class="action-btn" title="Delete" (click)="onDeleteUser(user, $event)">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </app-card>
+
+    <div *ngIf="selectedUser" class="selected-user-info">
+      <app-card title="Selected User Details" padding="medium">
+        <div class="user-details">
+          <p><strong>Name:</strong> {{ selectedUser.name }}</p>
+          <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+          <p><strong>Role:</strong> {{ selectedUser.role }}</p>
+          <p><strong>Last Active:</strong> {{ selectedUser.lastActive ? (selectedUser.lastActive | dateFormat:'relative') : 'Never' }}</p>
+          <p class="info-note">This user's information is now available in shared state for other modules.</p>
+        </div>
+      </app-card>
+    </div>
+  </div>
+
+  <!-- Add User Modal -->
+  <app-modal [isOpen]="showAddModal" title="Add New User" (closed)="onCloseAddModal()">
+    <form class="user-form" (ngSubmit)="onSubmitNewUser()">
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input 
+          type="text" 
+          id="name" 
+          [(ngModel)]="newUser.name" 
+          name="name"
+          required
+          class="form-input"
+          placeholder="Enter full name"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input 
+          type="email" 
+          id="email" 
+          [(ngModel)]="newUser.email" 
+          name="email"
+          required
+          class="form-input"
+          placeholder="user@example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select 
+          id="role" 
+          [(ngModel)]="newUser.role" 
+          name="role"
+          class="form-input"
+        >
+          <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select 
+          id="status" 
+          [(ngModel)]="newUser.status" 
+          name="status"
+          class="form-input"
+        >
+          <option *ngFor="let status of statuses" [value]="status">{{ getStatusLabel(status) }}</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <app-button type="secondary" (clicked)="onCloseAddModal()">Cancel</app-button>
+        <app-button type="primary" [disabled]="!newUser.name || !newUser.email">Add User</app-button>
+      </div>
+    </form>
+  </app-modal>
+
+  <!-- Edit User Modal -->
+  <app-modal [isOpen]="showEditModal" title="Edit User" (closed)="onCloseEditModal()">
+    <form class="user-form" (ngSubmit)="onSubmitEditUser()" *ngIf="editingUser">
+      <div class="form-group">
+        <label for="edit-name">Name *</label>
+        <input 
+          type="text" 
+          id="edit-name" 
+          [(ngModel)]="editingUser.name" 
+          name="name"
+          required
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="edit-email">Email *</label>
+        <input 
+          type="email" 
+          id="edit-email" 
+          [(ngModel)]="editingUser.email" 
+          name="email"
+          required
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="edit-role">Role</label>
+        <select 
+          id="edit-role" 
+          [(ngModel)]="editingUser.role" 
+          name="role"
+          class="form-input"
+        >
+          <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-status">Status</label>
+        <select 
+          id="edit-status" 
+          [(ngModel)]="editingUser.status" 
+          name="status"
+          class="form-input"
+        >
+          <option *ngFor="let status of statuses" [value]="status">{{ getStatusLabel(status) }}</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <app-button type="secondary" (clicked)="onCloseEditModal()">Cancel</app-button>
+        <app-button type="primary" [disabled]="!editingUser.name || !editingUser.email">Update User</app-button>
+      </div>
+    </form>
+  </app-modal>
+</div>

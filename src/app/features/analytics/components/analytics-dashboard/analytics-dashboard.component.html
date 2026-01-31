@@ -1,0 +1,65 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h1>Analytics Dashboard</h1>
+    <p class="subtitle">Monitor your key performance metrics in real-time</p>
+  </div>
+
+  <app-loading-spinner *ngIf="loading" message="Loading analytics data..."></app-loading-spinner>
+
+  <div *ngIf="!loading && analyticsData" class="dashboard-content">
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+      <app-card *ngFor="let metric of analyticsData.metrics" padding="medium" [hoverable]="true">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">{{ metric.label }}</span>
+          </div>
+          <div class="metric-value">{{ formatValue(metric.value, metric.label) }}</div>
+          <div class="metric-change" [style.color]="getTrendColor(metric.trend)">
+            <span class="change-icon">
+              {{ metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→' }}
+            </span>
+            <span>{{ Math.abs(metric.change) }}%</span>
+            <span class="change-label">vs last month</span>
+          </div>
+        </div>
+      </app-card>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-section">
+      <app-card title="Monthly Performance" padding="medium">
+        <div class="chart-container">
+          <div class="simple-bar-chart">
+            <div *ngFor="let point of analyticsData.chartData" class="bar-item">
+              <div class="bar" [style.height.%]="(point.value / 7000) * 100">
+                <span class="bar-value">{{ point.value }}</span>
+              </div>
+              <span class="bar-label">{{ point.label }}</span>
+            </div>
+          </div>
+        </div>
+      </app-card>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+      <app-card title="Recent Activity" subtitle="Latest system events" padding="none">
+        <div class="activity-list">
+          <div *ngFor="let activity of analyticsData.recentActivity" class="activity-item">
+            <div class="activity-icon">
+              <div class="icon-circle"></div>
+            </div>
+            <div class="activity-details">
+              <div class="activity-description">{{ activity.description }}</div>
+              <div class="activity-meta">
+                <span *ngIf="activity.user" class="activity-user">{{ activity.user }}</span>
+                <span class="activity-time">{{ activity.timestamp | dateFormat:'relative' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </app-card>
+    </div>
+  </div>
+</div>
