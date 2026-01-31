@@ -1,0 +1,105 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <p class="subtitle">Manage your application preferences</p>
+  </div>
+
+  <div class="settings-content">
+    <app-card title="General Settings" padding="medium">
+      <div class="settings-group">
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label">Enable Notifications</label>
+            <p class="setting-description">Receive alerts and updates</p>
+          </div>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="settings.notifications"
+              (change)="onToggleChange('notifications')"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label">Dark Mode</label>
+            <p class="setting-description">Switch to dark theme</p>
+          </div>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="settings.darkMode"
+              (change)="onToggleChange('darkMode')"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label">Auto Save</label>
+            <p class="setting-description">Automatically save changes</p>
+          </div>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="settings.autoSave"
+              (change)="onToggleChange('autoSave')"
+            />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </app-card>
+
+    <app-card title="Localization" padding="medium">
+      <div class="settings-group">
+        <div class="setting-item vertical">
+          <div class="setting-info">
+            <label class="setting-label">Language</label>
+            <p class="setting-description">Choose your preferred language</p>
+          </div>
+          <select 
+            class="setting-select"
+            [(ngModel)]="settings.language"
+            (change)="onSelectChange('language', settings.language)"
+          >
+            <option *ngFor="let lang of languages" [value]="lang.value">
+              {{ lang.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="setting-item vertical">
+          <div class="setting-info">
+            <label class="setting-label">Timezone</label>
+            <p class="setting-description">Set your local timezone</p>
+          </div>
+          <select 
+            class="setting-select"
+            [(ngModel)]="settings.timezone"
+            (change)="onSelectChange('timezone', settings.timezone)"
+          >
+            <option *ngFor="let tz of timezones" [value]="tz.value">
+              {{ tz.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </app-card>
+
+    <app-card padding="medium">
+      <div class="info-box">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <p class="info-title">Settings are automatically saved</p>
+          <p class="info-text">Changes to settings are persisted to localStorage and shared across the application via the EventBus service.</p>
+        </div>
+      </div>
+    </app-card>
+  </div>
+</div>
