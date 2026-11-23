@@ -76,8 +76,8 @@ describe('AnalyticsDashboardComponent', () => {
   });
 
   it('should return correct trend colors', () => {
-    expect(component.getTrendColor('up')).toBe('#10B981');
-    expect(component.getTrendColor('down')).toBe('#EF4444');
-    expect(component.getTrendColor('neutral')).toBe('#6B7280');
+    expect(component.getTrendColor('up')).toBe('var(--success)');
+    expect(component.getTrendColor('down')).toBe('var(--danger)');
+    expect(component.getTrendColor('neutral')).toBe('var(--text-muted)');
   });
 });

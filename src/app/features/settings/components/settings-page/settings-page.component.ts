@@ -1,21 +1,26 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
 import { AppSettings } from '../../models/settings.model';
 
+type ToggleKey = 'notifications' | 'darkMode' | 'autoSave';
+
 @Component({
-    selector: 'app-settings-page',
-    templateUrl: './settings-page.component.html',
-    styleUrls: ['./settings-page.component.scss'],
-    standalone: false
+  selector: 'app-settings-page',
+  templateUrl: './settings-page.component.html',
+  styleUrls: ['./settings-page.component.scss'],
+  standalone: false
 })
-export class SettingsPageComponent implements OnInit {
-  settings: AppSettings = {
-    notifications: false,
-    darkMode: false,
-    autoSave: false,
-    language: 'en',
-    timezone: 'UTC'
-  };
+export class SettingsPageComponent implements OnInit, OnDestroy {
+  settings!: AppSettings;
+  savedAt: Date | null = null;
+  preview = '';
+  private clock?: ReturnType<typeof setInterval>;
+
+  toggles: { key: ToggleKey; label: string; description: string }[] = [
+    { key: 'darkMode', label: 'Dark mode', description: 'Applied app-wide by the core ThemeService via the event bus' },
+    { key: 'notifications', label: 'Email notifications', description: 'Stored preference, sent with SETTINGS_CHANGED events' },
+    { key: 'autoSave', label: 'Auto save drafts', description: 'Stored preference, sent with SETTINGS_CHANGED events' }
+  ];
 
   languages = [
     { value: 'en', label: 'English' },
@@ -26,23 +31,47 @@ export class SettingsPageComponent implements OnInit {
 
   timezones = [
     { value: 'UTC', label: 'UTC' },
-    { value: 'America/New_York', label: 'Eastern Time' },
-    { value: 'America/Los_Angeles', label: 'Pacific Time' },
-    { value: 'Europe/London', label: 'London' }
+    { value: 'America/New_York', label: 'Eastern Time (New York)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (Los Angeles)' },
+    { value: 'Europe/London', label: 'London' },
+    { value: 'Asia/Kolkata', label: 'India (Kolkata)' }
   ];
 
   constructor(private settingsService: SettingsService) {}
 
   ngOnInit(): void {
     this.settings = this.settingsService.getSettings();
+    this.updatePreview();
+    this.clock = setInterval(() => this.updatePreview(), 30_000);
   }
 
-  onToggleChange(setting: keyof AppSettings): void {
-    this.settingsService.updateSettings({ [setting]: this.settings[setting] });
+  ngOnDestroy(): void {
+    clearInterval(this.clock);
   }
 
-  onSelectChange(setting: keyof AppSettings, value: string): void {
-    this.settings = { ...this.settings, [setting]: value };
-    this.settingsService.updateSettings({ [setting]: value });
+  save(patch: Partial<AppSettings>): void {
+    this.settingsService.updateSettings(patch);
+    this.savedAt = new Date();
+    this.updatePreview();
+  }
+
+  saveToggle(key: ToggleKey, value: boolean): void {
+    this.save({ [key]: value });
+  }
+
+  reset(): void {
+    this.settingsService.resetSettings();
+    this.settings = this.settingsService.getSettings();
+    this.savedAt = new Date();
+    this.updatePreview();
+  }
+
+  /** Shows the effect of language + timezone on date formatting. */
+  private updatePreview(): void {
+    this.preview = new Intl.DateTimeFormat(this.settings.language, {
+      dateStyle: 'full',
+      timeStyle: 'short',
+      timeZone: this.settings.timezone
+    }).format(new Date());
   }
 }

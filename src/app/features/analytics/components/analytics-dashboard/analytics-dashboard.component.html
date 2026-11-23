@@ -1,73 +1,78 @@
 <div class="dashboard">
-  <div class="dashboard-header">
+  <div class="page-header">
     <h1>Analytics Dashboard</h1>
-    <p class="subtitle">Monitor your key performance metrics in real-time</p>
+    <p class="subtitle">Key metrics served by the feature's own mock data service</p>
   </div>
+
+  @if (selectedUser$ | async; as selected) {
+    <div class="context-banner" role="status">
+      <span class="context-dot" aria-hidden="true"></span>
+      <span>
+        Selected in <a routerLink="/users">Users</a>: <strong>{{ selected.name }}</strong>
+        <span class="context-email">({{ selected.email }})</span>
+      </span>
+      <span class="context-note">via StateService</span>
+    </div>
+  }
 
   @if (loading) {
     <app-loading-spinner message="Loading analytics data..."></app-loading-spinner>
-  }
-
-  @if (!loading && analyticsData) {
+  } @else if (analyticsData) {
     <div class="dashboard-content">
-      <!-- Metrics Grid -->
-      <div class="metrics-grid">
-        @for (metric of analyticsData.metrics; track metric) {
+      <section class="metrics-grid" aria-label="Key metrics">
+        @for (metric of analyticsData.metrics; track metric.id) {
           <app-card padding="medium" [hoverable]="true">
             <div class="metric-card">
-              <div class="metric-header">
-                <span class="metric-label">{{ metric.label }}</span>
-              </div>
+              <span class="metric-label">{{ metric.label }}</span>
               <div class="metric-value">{{ formatValue(metric.value, metric.label) }}</div>
               <div class="metric-change" [style.color]="getTrendColor(metric.trend)">
-                <span class="change-icon">
-                  {{ metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→' }}
+                <span aria-hidden="true">{{ metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→' }}</span>
+                <span>
+                  <span class="sr-only">{{ metric.trend === 'down' ? 'Down' : 'Up' }}</span>
+                  {{ Math.abs(metric.change) }}%
                 </span>
-                <span>{{ Math.abs(metric.change) }}%</span>
                 <span class="change-label">vs last month</span>
               </div>
             </div>
           </app-card>
         }
-      </div>
-      <!-- Chart Section -->
-      <div class="chart-section">
-        <app-card title="Monthly Performance" padding="medium">
-          <div class="chart-container">
-            <div class="simple-bar-chart">
-              @for (point of analyticsData.chartData; track point) {
-                <div class="bar-item">
-                  <div class="bar" [style.height.%]="(point.value / 7000) * 100">
-                    <span class="bar-value">{{ point.value }}</span>
-                  </div>
-                  <span class="bar-label">{{ point.label }}</span>
-                </div>
-              }
-            </div>
-          </div>
-        </app-card>
-      </div>
-      <!-- Recent Activity -->
-      <div class="activity-section">
-        <app-card title="Recent Activity" subtitle="Latest system events" padding="none">
-          <div class="activity-list">
-            @for (activity of analyticsData.recentActivity; track activity) {
-              <div class="activity-item">
-                <div class="activity-icon">
-                  <div class="icon-circle"></div>
-                </div>
-                <div class="activity-details">
-                  <div class="activity-description">{{ activity.description }}</div>
-                  <div class="activity-meta">
-                    @if (activity.user) {
-                      <span class="activity-user">{{ activity.user }}</span>
-                    }
-                    <span class="activity-time">{{ activity.timestamp | dateFormat:'relative' }}</span>
-                  </div>
-                </div>
+      </section>
+
+      <div class="dashboard-columns">
+        <app-card title="Monthly performance" subtitle="Sessions per month" padding="medium">
+          <div class="bar-chart" role="img" [attr.aria-label]="'Bar chart of ' + analyticsData.chartData.length + ' months'">
+            @for (point of analyticsData.chartData; track point.label) {
+              <div class="bar-item">
+                <span class="bar-value">{{ point.value | number }}</span>
+                <div class="bar" [style.height.%]="(point.value / chartMax) * 100"></div>
+                <span class="bar-label">{{ point.label }}</span>
               </div>
             }
           </div>
+        </app-card>
+
+        <app-card title="Recent activity" subtitle="Latest system events" padding="none">
+          @if (analyticsData.recentActivity.length) {
+            <ul class="activity-list">
+              @for (activity of analyticsData.recentActivity; track activity.id) {
+                <li class="activity-item">
+                  <span class="activity-dot" [attr.data-type]="activity.type" aria-hidden="true"></span>
+                  <div class="activity-details">
+                    <div class="activity-description">{{ activity.description }}</div>
+                    <div class="activity-meta">
+                      @if (activity.user) {
+                        <span>{{ activity.user }}</span>
+                        <span aria-hidden="true">·</span>
+                      }
+                      <span>{{ activity.timestamp | dateFormat:'relative' }}</span>
+                    </div>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="empty">No recent activity.</p>
+          }
         </app-card>
       </div>
     </div>

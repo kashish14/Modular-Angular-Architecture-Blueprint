@@ -1,50 +1,34 @@
 .card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, border-color 0.2s;
 
   &.hoverable:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-    cursor: pointer;
+    box-shadow: var(--shadow-md);
   }
 }
 
 .card-header {
-  border-bottom: 1px solid #E5E7EB;
-  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.25rem;
 }
 
 .card-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text);
 }
 
 .card-subtitle {
   margin: 0.25rem 0 0 0;
-  font-size: 0.875rem;
-  color: #6B7280;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
 
-.card-content {
-  // Padding applied via class modifier
-}
-
-.padding-none .card-content {
-  padding: 0;
-}
-
-.padding-small .card-content {
-  padding: 0.75rem;
-}
-
-.padding-medium .card-content {
-  padding: 1.5rem;
-}
-
-.padding-large .card-content {
-  padding: 2rem;
-}
+.padding-none .card-content { padding: 0; }
+.padding-small .card-content { padding: 0.75rem; }
+.padding-medium .card-content { padding: 1.25rem; }
+.padding-large .card-content { padding: 2rem; }

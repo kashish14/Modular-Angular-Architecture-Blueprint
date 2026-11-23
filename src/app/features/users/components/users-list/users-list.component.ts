@@ -1,49 +1,80 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { StateService } from '@core/services/state.service';
 import { UsersService } from '../../services/users.service';
 import { User } from '../../models/user.model';
 
+type UserStatus = User['status'];
+
+interface UserForm {
+  name: string;
+  email: string;
+  role: string;
+  status: UserStatus;
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 @Component({
-    selector: 'app-users-list',
-    templateUrl: './users-list.component.html',
-    styleUrls: ['./users-list.component.scss'],
-    standalone: false
+  selector: 'app-users-list',
+  templateUrl: './users-list.component.html',
+  styleUrls: ['./users-list.component.scss'],
+  standalone: false
 })
 export class UsersListComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+
   users: User[] = [];
   loading = true;
+  saving = false;
+  searchTerm = '';
   selectedUser: User | null = null;
-  showAddModal = false;
-  showEditModal = false;
-  
-  // Form data
-  newUser = {
-    name: '',
-    email: '',
-    role: 'User',
-    status: 'active' as 'active' | 'inactive' | 'pending'
-  };
 
-  editingUser: User | null = null;
+  /** Add and edit share one form; `editingId` is null when adding. */
+  showFormModal = false;
+  editingId: string | null = null;
+  form: UserForm = this.emptyForm();
+
+  userToDelete: User | null = null;
 
   roles = ['Admin', 'Manager', 'User', 'Viewer'];
-  statuses: Array<'active' | 'inactive' | 'pending'> = ['active', 'inactive', 'pending'];
+  statuses: UserStatus[] = ['active', 'inactive', 'pending'];
 
-  constructor(
-    private usersService: UsersService,
-    private router: Router
-  ) {}
+  constructor(private usersService: UsersService, private state: StateService) {}
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.usersService
+      .getUsers()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(users => {
+        this.users = users;
+        this.loading = false;
+        // Restore the selection kept in shared state when returning to this page.
+        const selectedId = this.selectedUser?.id ?? this.state.getSelectedUser()?.id;
+        this.selectedUser = users.find(u => u.id === selectedId) ?? null;
+      });
   }
 
-  loadUsers(): void {
-    this.loading = true;
-    this.usersService.getUsers().subscribe(users => {
-      this.users = users;
-      this.loading = false;
-    });
+  get filteredUsers(): User[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) {
+      return this.users;
+    }
+    return this.users.filter(
+      u => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term) || u.role.toLowerCase().includes(term)
+    );
+  }
+
+  get activeCount(): number {
+    return this.users.filter(u => u.status === 'active').length;
+  }
+
+  get formValid(): boolean {
+    return !!this.form.name.trim() && EMAIL_PATTERN.test(this.form.email.trim());
+  }
+
+  get emailInvalid(): boolean {
+    return !!this.form.email && !EMAIL_PATTERN.test(this.form.email.trim());
   }
 
   onUserClick(user: User): void {
@@ -52,79 +83,79 @@ export class UsersListComponent implements OnInit {
   }
 
   onAddUser(): void {
-    this.showAddModal = true;
-    this.resetForm();
-  }
-
-  onCloseAddModal(): void {
-    this.showAddModal = false;
-    this.resetForm();
-  }
-
-  onSubmitNewUser(): void {
-    if (this.newUser.name && this.newUser.email) {
-      this.usersService.addUser(this.newUser).subscribe(() => {
-        this.loadUsers();
-        this.onCloseAddModal();
-      });
-    }
+    this.editingId = null;
+    this.form = this.emptyForm();
+    this.showFormModal = true;
   }
 
   onEditUser(user: User, event: Event): void {
     event.stopPropagation();
-    this.editingUser = { ...user };
-    this.showEditModal = true;
+    this.editingId = user.id;
+    this.form = { name: user.name, email: user.email, role: user.role, status: user.status };
+    this.showFormModal = true;
   }
 
-  onCloseEditModal(): void {
-    this.showEditModal = false;
-    this.editingUser = null;
+  onCloseFormModal(): void {
+    this.showFormModal = false;
   }
 
-  onSubmitEditUser(): void {
-    if (this.editingUser) {
-      this.usersService.updateUser(this.editingUser.id, this.editingUser).subscribe(() => {
-        this.loadUsers();
-        this.onCloseEditModal();
-      });
+  onSubmitForm(): void {
+    if (!this.formValid || this.saving) {
+      return;
     }
+    const data = { ...this.form, name: this.form.name.trim(), email: this.form.email.trim() };
+    const request$ = this.editingId ? this.usersService.updateUser(this.editingId, data) : this.usersService.addUser(data);
+    this.saving = true;
+    request$.subscribe(() => {
+      this.saving = false;
+      this.showFormModal = false;
+    });
   }
 
   onDeleteUser(user: User, event: Event): void {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to delete ${user.name}?`)) {
-      this.usersService.deleteUser(user.id).subscribe(() => {
-        if (this.selectedUser?.id === user.id) {
-          this.selectedUser = null;
-        }
-        this.loadUsers();
-      });
-    }
+    this.userToDelete = user;
   }
 
-  resetForm(): void {
-    this.newUser = {
-      name: '',
-      email: '',
-      role: 'User',
-      status: 'active'
-    };
+  onConfirmDelete(): void {
+    const user = this.userToDelete;
+    if (!user || this.saving) {
+      return;
+    }
+    this.saving = true;
+    this.usersService.deleteUser(user.id).subscribe(() => {
+      this.saving = false;
+      this.userToDelete = null;
+    });
   }
 
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'active':
-        return '#10B981';
-      case 'inactive':
-        return '#6B7280';
-      case 'pending':
-        return '#F59E0B';
-      default:
-        return '#6B7280';
+  onCancelDelete(): void {
+    this.userToDelete = null;
+  }
+
+  initials(name: string): string {
+    return name
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+  avatarHue(user: User): number {
+    let hash = 0;
+    for (const ch of user.name) {
+      hash = (hash * 31 + ch.charCodeAt(0)) % 360;
     }
+    return hash;
   }
 
   getStatusLabel(status: string): string {
     return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+
+  private emptyForm(): UserForm {
+    return { name: '', email: '', role: 'User', status: 'active' };
   }
 }

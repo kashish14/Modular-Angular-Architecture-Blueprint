@@ -1,87 +1,92 @@
+:host {
+  display: flex;
+}
+
 .sidebar {
   width: 240px;
-  background: white;
-  border-right: 1px solid #E5E7EB;
-  height: calc(100vh - 64px);
-  position: sticky;
-  top: 64px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease, transform 0.25s ease, visibility 0.25s;
 }
 
 .sidebar-nav {
-  padding: 1rem 0;
+  padding: 1rem 0.75rem;
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.5rem;
-  color: #6B7280;
-  text-decoration: none;
-  transition: all 0.2s;
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #4F46E5;
-    transform: scaleY(0);
-    transition: transform 0.2s;
-  }
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 
   &:hover {
-    background: #F9FAFB;
-    color: #111827;
+    background: var(--surface-hover);
+    color: var(--text);
   }
 
   &.active {
-    background: #EEF2FF;
-    color: #4F46E5;
-    font-weight: 500;
-
-    &::before {
-      transform: scaleY(1);
-    }
+    background: var(--primary-soft);
+    color: var(--primary-soft-text);
+    font-weight: 600;
   }
 }
 
 .nav-icon {
   display: flex;
-  align-items: center;
   flex-shrink: 0;
 }
 
-.nav-label {
-  flex: 1;
-  font-size: 0.875rem;
-}
-
-.nav-badge {
-  background: #EF4444;
-  color: white;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem 1.5rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
+/* Desktop: collapsing turns the sidebar into an icon rail */
+@media (min-width: 769px) {
+  .sidebar.collapsed {
+    width: 68px;
+
+    .nav-label,
+    .sidebar-footer {
+      display: none;
+    }
+
+    .nav-item {
+      justify-content: center;
+    }
+  }
+}
+
+/* Mobile: the sidebar is an overlay drawer */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
-    left: -240px;
     top: 64px;
+    bottom: 0;
+    left: 0;
     z-index: 50;
-    transition: left 0.3s;
+    box-shadow: var(--shadow-lg);
 
-    &.open {
-      left: 0;
+    &.collapsed {
+      transform: translateX(-100%);
+      box-shadow: none;
+      visibility: hidden;
     }
   }
 }

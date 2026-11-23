@@ -1,208 +1,188 @@
 <div class="users-page">
-  <div class="page-header">
-    <h1>User Management</h1>
-    <p class="subtitle">Manage and monitor user accounts</p>
+  <div class="page-header with-action">
+    <div>
+      <h1>User Management</h1>
+      <p class="subtitle">
+        @if (!loading) {
+          {{ users.length }} users · {{ activeCount }} active ·
+        }
+        Select a user to share it with other features through <code>StateService</code>
+      </p>
+    </div>
+    <app-button type="primary" (clicked)="onAddUser()" [disabled]="loading">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add user
+    </app-button>
   </div>
 
   @if (loading) {
     <app-loading-spinner message="Loading users..."></app-loading-spinner>
-  }
-
-  @if (!loading) {
+  } @else {
     <div class="users-content">
-      <div class="users-actions">
-        <app-button type="primary" (clicked)="onAddUser()">
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          Add User
-        </app-button>
-      </div>
       <app-card padding="none">
-        <div class="users-table">
-          <div class="table-header">
-            <div class="header-cell">User</div>
-            <div class="header-cell">Email</div>
-            <div class="header-cell">Role</div>
-            <div class="header-cell">Status</div>
-            <div class="header-cell">Joined</div>
-            <div class="header-cell">Actions</div>
+        <div class="toolbar">
+          <label class="search">
+            <span class="sr-only">Search users</span>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+            </svg>
+            <input
+              type="search"
+              class="form-input"
+              placeholder="Search by name, email or role"
+              [(ngModel)]="searchTerm"
+              name="search"
+            />
+          </label>
+        </div>
+
+        @if (filteredUsers.length) {
+          <div class="table-wrap">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th scope="col">User</th>
+                  <th scope="col" class="col-role">Role</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" class="col-joined">Joined</th>
+                  <th scope="col" class="col-actions"><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of filteredUsers; track user.id) {
+                  <tr [class.selected]="selectedUser?.id === user.id" (click)="onUserClick(user)">
+                    <td>
+                      <button type="button" class="user-cell" [attr.aria-pressed]="selectedUser?.id === user.id">
+                        <span class="avatar" [style.--hue]="avatarHue(user)" aria-hidden="true">{{ initials(user.name) }}</span>
+                        <span class="user-text">
+                          <span class="user-name">{{ user.name }}</span>
+                          <span class="user-email">{{ user.email }}</span>
+                        </span>
+                      </button>
+                    </td>
+                    <td class="col-role"><span class="role-badge">{{ user.role }}</span></td>
+                    <td>
+                      <span class="status-badge" [class]="'status-badge status-' + user.status">
+                        {{ getStatusLabel(user.status) }}
+                      </span>
+                    </td>
+                    <td class="col-joined">{{ user.joinedDate | dateFormat:'short' }}</td>
+                    <td class="col-actions">
+                      <button type="button" class="action-btn" [attr.aria-label]="'Edit ' + user.name" title="Edit" (click)="onEditUser(user, $event)">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button type="button" class="action-btn danger" [attr.aria-label]="'Delete ' + user.name" title="Delete" (click)="onDeleteUser(user, $event)">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
-          <div class="table-body">
-            @for (user of users; track user) {
-              <div
-                class="table-row"
-                [class.selected]="selectedUser?.id === user.id"
-                (click)="onUserClick(user)"
-                >
-                <div class="table-cell user-cell">
-                  <img [src]="user.avatar" [alt]="user.name" class="user-avatar" />
-                  <span class="user-name">{{ user.name }}</span>
-                </div>
-                <div class="table-cell">{{ user.email }}</div>
-                <div class="table-cell">
-                  <span class="role-badge">{{ user.role }}</span>
-                </div>
-                <div class="table-cell">
-                  <span class="status-badge" [style.background-color]="getStatusColor(user.status)">
-                    {{ getStatusLabel(user.status) }}
-                  </span>
-                </div>
-                <div class="table-cell">{{ user.joinedDate | dateFormat:'short' }}</div>
-                <div class="table-cell actions-cell">
-                  <button class="action-btn" title="Edit" (click)="onEditUser(user, $event)">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button class="action-btn" title="Delete" (click)="onDeleteUser(user, $event)">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+        } @else {
+          <div class="empty-state">
+            @if (users.length) {
+              <p class="empty-title">No users match "{{ searchTerm }}"</p>
+              <p class="empty-text">Try a different name, email or role.</p>
+              <app-button type="secondary" size="small" (clicked)="searchTerm = ''">Clear search</app-button>
+            } @else {
+              <p class="empty-title">No users yet</p>
+              <p class="empty-text">Add the first user to get started.</p>
+              <app-button type="primary" size="small" (clicked)="onAddUser()">Add user</app-button>
             }
           </div>
-        </div>
+        }
       </app-card>
+
       @if (selectedUser) {
-        <div class="selected-user-info">
-          <app-card title="Selected User Details" padding="medium">
-            <div class="user-details">
-              <p><strong>Name:</strong> {{ selectedUser.name }}</p>
-              <p><strong>Email:</strong> {{ selectedUser.email }}</p>
-              <p><strong>Role:</strong> {{ selectedUser.role }}</p>
-              <p><strong>Last Active:</strong> {{ selectedUser.lastActive ? (selectedUser.lastActive | dateFormat:'relative') : 'Never' }}</p>
-              <p class="info-note">This user's information is now available in shared state for other modules.</p>
+        <app-card title="Selected user" subtitle="Held in StateService and shown on the Dashboard" padding="medium">
+          <dl class="user-details">
+            <div><dt>Name</dt><dd>{{ selectedUser.name }}</dd></div>
+            <div><dt>Email</dt><dd>{{ selectedUser.email }}</dd></div>
+            <div><dt>Role</dt><dd>{{ selectedUser.role }}</dd></div>
+            <div>
+              <dt>Last active</dt>
+              <dd>{{ selectedUser.lastActive ? (selectedUser.lastActive | dateFormat:'relative') : 'Never' }}</dd>
             </div>
-          </app-card>
-        </div>
+          </dl>
+          <a routerLink="/dashboard" class="details-link">Open dashboard &rarr;</a>
+        </app-card>
       }
     </div>
   }
 
-  <!-- Add User Modal -->
-  <app-modal [isOpen]="showAddModal" title="Add New User" (closed)="onCloseAddModal()">
-    <form class="user-form" (ngSubmit)="onSubmitNewUser()">
+  <!-- Add / edit user -->
+  <app-modal [isOpen]="showFormModal" [title]="editingId ? 'Edit user' : 'Add user'" (closed)="onCloseFormModal()">
+    <form class="user-form" (ngSubmit)="onSubmitForm()" novalidate>
       <div class="form-group">
-        <label for="name">Name *</label>
-        <input
-          type="text"
-          id="name"
-          [(ngModel)]="newUser.name"
-          name="name"
-          required
-          class="form-input"
-          placeholder="Enter full name"
-          />
+        <label for="user-name">Name</label>
+        <input type="text" id="user-name" [(ngModel)]="form.name" name="name" required class="form-input" placeholder="Full name" autocomplete="off" />
       </div>
 
       <div class="form-group">
-        <label for="email">Email *</label>
+        <label for="user-email">Email</label>
         <input
           type="email"
-          id="email"
-          [(ngModel)]="newUser.email"
+          id="user-email"
+          [(ngModel)]="form.email"
           name="email"
           required
           class="form-input"
-          placeholder="user@example.com"
-          />
+          [class.invalid]="emailInvalid"
+          [attr.aria-invalid]="emailInvalid"
+          aria-describedby="user-email-error"
+          placeholder="name@example.com"
+          autocomplete="off"
+        />
+        @if (emailInvalid) {
+          <span id="user-email-error" class="field-error">Enter a valid email address.</span>
+        }
       </div>
 
-      <div class="form-group">
-        <label for="role">Role</label>
-        <select
-          id="role"
-          [(ngModel)]="newUser.role"
-          name="role"
-          class="form-input"
-          >
-          @for (role of roles; track role) {
-            <option [value]="role">{{ role }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="status">Status</label>
-        <select
-          id="status"
-          [(ngModel)]="newUser.status"
-          name="status"
-          class="form-input"
-          >
-          @for (status of statuses; track status) {
-            <option [value]="status">{{ getStatusLabel(status) }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="form-actions">
-        <app-button type="secondary" (clicked)="onCloseAddModal()">Cancel</app-button>
-        <app-button type="primary" [disabled]="!newUser.name || !newUser.email">Add User</app-button>
-      </div>
-    </form>
-  </app-modal>
-
-  <!-- Edit User Modal -->
-  <app-modal [isOpen]="showEditModal" title="Edit User" (closed)="onCloseEditModal()">
-    @if (editingUser) {
-      <form class="user-form" (ngSubmit)="onSubmitEditUser()">
+      <div class="form-row">
         <div class="form-group">
-          <label for="edit-name">Name *</label>
-          <input
-            type="text"
-            id="edit-name"
-            [(ngModel)]="editingUser.name"
-            name="name"
-            required
-            class="form-input"
-            />
-        </div>
-        <div class="form-group">
-          <label for="edit-email">Email *</label>
-          <input
-            type="email"
-            id="edit-email"
-            [(ngModel)]="editingUser.email"
-            name="email"
-            required
-            class="form-input"
-            />
-        </div>
-        <div class="form-group">
-          <label for="edit-role">Role</label>
-          <select
-            id="edit-role"
-            [(ngModel)]="editingUser.role"
-            name="role"
-            class="form-input"
-            >
+          <label for="user-role">Role</label>
+          <select id="user-role" [(ngModel)]="form.role" name="role" class="form-input">
             @for (role of roles; track role) {
               <option [value]="role">{{ role }}</option>
             }
           </select>
         </div>
+
         <div class="form-group">
-          <label for="edit-status">Status</label>
-          <select
-            id="edit-status"
-            [(ngModel)]="editingUser.status"
-            name="status"
-            class="form-input"
-            >
+          <label for="user-status">Status</label>
+          <select id="user-status" [(ngModel)]="form.status" name="status" class="form-input">
             @for (status of statuses; track status) {
               <option [value]="status">{{ getStatusLabel(status) }}</option>
             }
           </select>
         </div>
-        <div class="form-actions">
-          <app-button type="secondary" (clicked)="onCloseEditModal()">Cancel</app-button>
-          <app-button type="primary" [disabled]="!editingUser.name || !editingUser.email">Update User</app-button>
-        </div>
-      </form>
-    }
+      </div>
+
+      <div class="form-actions">
+        <app-button type="secondary" (clicked)="onCloseFormModal()">Cancel</app-button>
+        <app-button type="primary" buttonType="submit" [disabled]="!formValid" [loading]="saving">
+          {{ editingId ? 'Save changes' : 'Add user' }}
+        </app-button>
+      </div>
+    </form>
+  </app-modal>
+
+  <!-- Delete confirmation -->
+  <app-modal [isOpen]="!!userToDelete" title="Delete user" (closed)="onCancelDelete()">
+    <p class="confirm-text">
+      Delete <strong>{{ userToDelete?.name }}</strong>? This removes the user from the list and clears it from shared state.
+    </p>
+    <div class="form-actions">
+      <app-button type="secondary" (clicked)="onCancelDelete()">Cancel</app-button>
+      <app-button type="danger" [loading]="saving" (clicked)="onConfirmDelete()">Delete</app-button>
+    </div>
   </app-modal>
 </div>
