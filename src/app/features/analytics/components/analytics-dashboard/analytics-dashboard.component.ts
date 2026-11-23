@@ -3,9 +3,10 @@ import { AnalyticsService } from '../../services/analytics.service';
 import { AnalyticsData, Metric, Activity } from '../../models/analytics.model';
 
 @Component({
-  selector: 'app-analytics-dashboard',
-  templateUrl: './analytics-dashboard.component.html',
-  styleUrls: ['./analytics-dashboard.component.scss']
+    selector: 'app-analytics-dashboard',
+    templateUrl: './analytics-dashboard.component.html',
+    styleUrls: ['./analytics-dashboard.component.scss'],
+    standalone: false
 })
 export class AnalyticsDashboardComponent implements OnInit {
   analyticsData: AnalyticsData | null = null;

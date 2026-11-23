@@ -13,11 +13,11 @@
             <p class="setting-description">Receive alerts and updates</p>
           </div>
           <label class="toggle-switch">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               [(ngModel)]="settings.notifications"
               (change)="onToggleChange('notifications')"
-            />
+              />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -28,11 +28,11 @@
             <p class="setting-description">Switch to dark theme</p>
           </div>
           <label class="toggle-switch">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               [(ngModel)]="settings.darkMode"
               (change)="onToggleChange('darkMode')"
-            />
+              />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -43,11 +43,11 @@
             <p class="setting-description">Automatically save changes</p>
           </div>
           <label class="toggle-switch">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               [(ngModel)]="settings.autoSave"
               (change)="onToggleChange('autoSave')"
-            />
+              />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -61,14 +61,16 @@
             <label class="setting-label">Language</label>
             <p class="setting-description">Choose your preferred language</p>
           </div>
-          <select 
+          <select
             class="setting-select"
             [(ngModel)]="settings.language"
             (change)="onSelectChange('language', settings.language)"
-          >
-            <option *ngFor="let lang of languages" [value]="lang.value">
-              {{ lang.label }}
-            </option>
+            >
+            @for (lang of languages; track lang) {
+              <option [value]="lang.value">
+                {{ lang.label }}
+              </option>
+            }
           </select>
         </div>
 
@@ -77,14 +79,16 @@
             <label class="setting-label">Timezone</label>
             <p class="setting-description">Set your local timezone</p>
           </div>
-          <select 
+          <select
             class="setting-select"
             [(ngModel)]="settings.timezone"
             (change)="onSelectChange('timezone', settings.timezone)"
-          >
-            <option *ngFor="let tz of timezones" [value]="tz.value">
-              {{ tz.label }}
-            </option>
+            >
+            @for (tz of timezones; track tz) {
+              <option [value]="tz.value">
+                {{ tz.label }}
+              </option>
+            }
           </select>
         </div>
       </div>

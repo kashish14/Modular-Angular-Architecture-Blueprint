@@ -1,8 +1,14 @@
 <div class="card" [class.hoverable]="hoverable" [class]="'padding-' + padding">
-  <div class="card-header" *ngIf="title || subtitle">
-    <h3 class="card-title" *ngIf="title">{{ title }}</h3>
-    <p class="card-subtitle" *ngIf="subtitle">{{ subtitle }}</p>
-  </div>
+  @if (title || subtitle) {
+    <div class="card-header">
+      @if (title) {
+        <h3 class="card-title">{{ title }}</h3>
+      }
+      @if (subtitle) {
+        <p class="card-subtitle">{{ subtitle }}</p>
+      }
+    </div>
+  }
   <div class="card-content">
     <ng-content></ng-content>
   </div>

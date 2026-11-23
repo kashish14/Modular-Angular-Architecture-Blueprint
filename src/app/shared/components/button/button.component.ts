@@ -4,9 +4,10 @@ export type ButtonType = 'primary' | 'secondary' | 'success' | 'danger' | 'warni
 export type ButtonSize = 'small' | 'medium' | 'large';
 
 @Component({
-  selector: 'app-button',
-  templateUrl: './button.component.html',
-  styleUrls: ['./button.component.scss']
+    selector: 'app-button',
+    templateUrl: './button.component.html',
+    styleUrls: ['./button.component.scss'],
+    standalone: false
 })
 export class ButtonComponent {
   @Input() type: ButtonType = 'primary';
