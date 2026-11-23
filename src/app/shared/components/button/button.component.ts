@@ -15,6 +15,9 @@ export class ButtonComponent {
   @Input() disabled = false;
   @Input() loading = false;
   @Input() fullWidth = false;
+  /** Native button type. Defaults to 'button' so buttons inside forms never submit by accident. */
+  @Input() buttonType: 'button' | 'submit' = 'button';
+  @Input() ariaLabel?: string;
   @Output() clicked = new EventEmitter<MouseEvent>();
 
   onClick(event: MouseEvent): void {

@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { AppSettings } from '../models/settings.model';
 import { EventBusService, EventTypes } from '@core/services/event-bus.service';
+import { SETTINGS_STORAGE_KEY } from '@core/services/theme.service';
 
-const DEFAULT_SETTINGS: AppSettings = {
+export const DEFAULT_SETTINGS: AppSettings = {
   notifications: true,
   darkMode: false,
   autoSave: true,
@@ -19,7 +20,11 @@ export class SettingsService {
   constructor(private eventBus: EventBusService) {}
 
   getSettings(): AppSettings {
-    return this.settingsSubject.value;
+    return { ...this.settingsSubject.value };
+  }
+
+  resetSettings(): void {
+    this.updateSettings(DEFAULT_SETTINGS);
   }
 
   updateSettings(settings: Partial<AppSettings>): void {
@@ -32,11 +37,14 @@ export class SettingsService {
   }
 
   private loadSettings(): AppSettings {
-    const stored = localStorage.getItem('app_settings');
-    return stored ? JSON.parse(stored) : DEFAULT_SETTINGS;
+    try {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) ?? '{}') };
+    } catch {
+      return { ...DEFAULT_SETTINGS };
+    }
   }
 
   private saveSettings(settings: AppSettings): void {
-    localStorage.setItem('app_settings', JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }
 }

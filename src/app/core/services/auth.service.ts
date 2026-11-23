@@ -6,10 +6,9 @@ import { User, Credentials, AuthResponse, UserRole } from '../models/user.model'
 // Mock user data
 const MOCK_USER: User = {
   id: '1',
-  email: 'admin@enterprise.com',
+  email: 'admin@example.com',
   name: 'Admin User',
-  role: UserRole.ADMIN,
-  avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=4F46E5&color=fff'
+  role: UserRole.ADMIN
 };
 
 @Injectable({
@@ -41,7 +40,7 @@ export class AuthService {
       user: MOCK_USER,
       token: 'mock-jwt-token-' + Date.now()
     }).pipe(
-      delay(800), // Simulate network delay
+      delay(300), // Simulate network delay
       tap(response => {
         this.setCurrentUser(response.user);
         localStorage.setItem('auth_token', response.token);

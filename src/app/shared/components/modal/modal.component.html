@@ -1,10 +1,10 @@
 @if (isOpen) {
-  <div class="modal-backdrop" (click)="onBackdropClick()">
-    <div class="modal" (click)="onModalClick($event)">
+  <div class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div #dialog class="modal" role="dialog" aria-modal="true" [attr.aria-labelledby]="titleId" tabindex="-1">
       <div class="modal-header">
-        <h2 class="modal-title">{{ title }}</h2>
-        <button class="modal-close" (click)="onClose()" aria-label="Close">
-          <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h2 class="modal-title" [id]="titleId">{{ title }}</h2>
+        <button type="button" class="modal-close" (click)="onClose()" aria-label="Close dialog">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>

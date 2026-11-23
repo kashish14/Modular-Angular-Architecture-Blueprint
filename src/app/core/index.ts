@@ -8,6 +8,7 @@ export * from './services/api.service';
 export * from './services/state.service';
 export * from './services/event-bus.service';
 export * from './services/logger.service';
+export * from './services/theme.service';
 
 // Guards
 export * from './guards/auth.guard';

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, timer } from 'rxjs';
+import { delay, map, switchMap, tap } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import { StateService } from '@core/services/state.service';
 import { EventBusService, EventTypes } from '@core/services/event-bus.service';
@@ -12,7 +12,6 @@ const MOCK_USERS: User[] = [
     email: 'john.doe@example.com',
     role: 'Admin',
     status: 'active',
-    avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=4F46E5&color=fff',
     joinedDate: new Date('2023-01-15'),
     lastActive: new Date()
   },
@@ -22,7 +21,6 @@ const MOCK_USERS: User[] = [
     email: 'jane.smith@example.com',
     role: 'User',
     status: 'active',
-    avatar: 'https://ui-avatars.com/api/?name=Jane+Smith&background=10B981&color=fff',
     joinedDate: new Date('2023-03-22'),
     lastActive: new Date(Date.now() - 1000 * 60 * 30)
   },
@@ -32,7 +30,6 @@ const MOCK_USERS: User[] = [
     email: 'bob.johnson@example.com',
     role: 'User',
     status: 'inactive',
-    avatar: 'https://ui-avatars.com/api/?name=Bob+Johnson&background=EF4444&color=fff',
     joinedDate: new Date('2023-05-10'),
     lastActive: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)
   },
@@ -42,11 +39,13 @@ const MOCK_USERS: User[] = [
     email: 'alice.williams@example.com',
     role: 'Manager',
     status: 'active',
-    avatar: 'https://ui-avatars.com/api/?name=Alice+Williams&background=F59E0B&color=fff',
     joinedDate: new Date('2023-02-01'),
     lastActive: new Date(Date.now() - 1000 * 60 * 5)
   }
 ];
+
+/** Simulated network latency for the in-memory API. */
+const LATENCY_MS = 400;
 
 @Injectable()
 export class UsersService {
@@ -58,70 +57,69 @@ export class UsersService {
     private eventBus: EventBusService
   ) {}
 
+  /** Emits the user list after an initial simulated load, then on every change. */
   getUsers(): Observable<User[]> {
-    return this.users$.pipe(delay(500));
+    return timer(LATENCY_MS).pipe(switchMap(() => this.users$));
   }
 
   getUserById(id: string): Observable<User | undefined> {
     return this.users$.pipe(
       map(users => users.find(u => u.id === id)),
-      delay(300)
+      delay(LATENCY_MS)
     );
   }
 
-  addUser(userData: Omit<User, 'id' | 'avatar' | 'joinedDate' | 'lastActive'>): Observable<User> {
+  addUser(userData: Omit<User, 'id' | 'joinedDate' | 'lastActive'>): Observable<User> {
     const newUser: User = {
       id: String(Date.now()),
       ...userData,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=random&color=fff`,
-      joinedDate: new Date(),
-      lastActive: new Date()
+      joinedDate: new Date()
     };
 
-    const currentUsers = this.usersSubject.value;
-    this.usersSubject.next([...currentUsers, newUser]);
-
-    // Emit event
-    this.eventBus.emit(EventTypes.USER_UPDATED, newUser);
-
-    return of(newUser).pipe(delay(500));
+    return of(newUser).pipe(
+      delay(LATENCY_MS),
+      tap(user => {
+        this.usersSubject.next([...this.usersSubject.value, user]);
+        this.eventBus.emit(EventTypes.USER_UPDATED, user);
+      })
+    );
   }
 
   updateUser(id: string, userData: Partial<User>): Observable<User | undefined> {
-    const currentUsers = this.usersSubject.value;
-    const userIndex = currentUsers.findIndex(u => u.id === id);
-
-    if (userIndex === -1) {
-      return of(undefined).pipe(delay(300));
+    const current = this.usersSubject.value.find(u => u.id === id);
+    if (!current) {
+      return of(undefined).pipe(delay(LATENCY_MS));
     }
 
-    const updatedUser = { ...currentUsers[userIndex], ...userData };
-    const newUsers = [...currentUsers];
-    newUsers[userIndex] = updatedUser;
-    this.usersSubject.next(newUsers);
-
-    // Emit event
-    this.eventBus.emit(EventTypes.USER_UPDATED, updatedUser);
-
-    return of(updatedUser).pipe(delay(500));
+    const updatedUser = { ...current, ...userData, id };
+    return of(updatedUser).pipe(
+      delay(LATENCY_MS),
+      tap(user => {
+        this.usersSubject.next(this.usersSubject.value.map(u => (u.id === id ? user : u)));
+        if (this.stateService.getSelectedUser()?.id === id) {
+          this.stateService.setSelectedUser({ id, name: user.name, email: user.email });
+        }
+        this.eventBus.emit(EventTypes.USER_UPDATED, user);
+      })
+    );
   }
 
   deleteUser(id: string): Observable<boolean> {
-    const currentUsers = this.usersSubject.value;
-    const newUsers = currentUsers.filter(u => u.id !== id);
-    this.usersSubject.next(newUsers);
-
-    // Emit event
-    this.eventBus.emit(EventTypes.USER_DELETED, { id });
-
-    return of(true).pipe(delay(500));
+    return of(true).pipe(
+      delay(LATENCY_MS),
+      tap(() => {
+        this.usersSubject.next(this.usersSubject.value.filter(u => u.id !== id));
+        if (this.stateService.getSelectedUser()?.id === id) {
+          this.stateService.setSelectedUser(null);
+        }
+        this.eventBus.emit(EventTypes.USER_DELETED, { id });
+      })
+    );
   }
 
   selectUser(user: User): void {
-    // Update shared state
-    this.stateService.setSelectedUserId(user.id);
-    
-    // Emit event for other modules
+    // Shared state: read by the Dashboard feature without importing this module.
+    this.stateService.setSelectedUser({ id: user.id, name: user.name, email: user.email });
     this.eventBus.emit(EventTypes.USER_SELECTED, user);
   }
 }

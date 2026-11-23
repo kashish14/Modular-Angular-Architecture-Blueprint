@@ -1,10 +1,12 @@
-<div class="app-container">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<div class="app-container" [class.sidebar-collapsed]="sidebarCollapsed$ | async">
   <app-header></app-header>
-  
+
   <div class="app-content">
     <app-sidebar></app-sidebar>
-    
-    <main class="main-content">
+    <div class="sidebar-backdrop" (click)="closeSidebar()" aria-hidden="true"></div>
+
+    <main id="main-content" class="main-content" tabindex="-1">
       <router-outlet></router-outlet>
     </main>
   </div>

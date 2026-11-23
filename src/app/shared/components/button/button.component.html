@@ -1,9 +1,12 @@
 <button
+  [attr.type]="buttonType"
   [class]="classes"
   [disabled]="disabled || loading"
+  [attr.aria-label]="ariaLabel"
+  [attr.aria-busy]="loading || null"
   (click)="onClick($event)">
   @if (loading) {
-    <span class="spinner"></span>
+    <span class="spinner" aria-hidden="true"></span>
   }
   <ng-content></ng-content>
 </button>

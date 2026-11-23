@@ -31,9 +31,6 @@
       ],
       "@layout/*": [
         "src/app/layout/*"
-      ],
-      "@environments/*": [
-        "src/environments/*"
       ]
     }
   },

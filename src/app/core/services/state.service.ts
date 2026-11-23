@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
+
+/** Minimal, feature-agnostic view of a user that features can share. */
+export interface SelectedUser {
+  id: string;
+  name: string;
+  email: string;
+}
 
 /**
  * StateService - Shared state management across features
@@ -11,9 +18,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class StateService {
-  // Selected user state (shared between Users and Analytics modules)
-  private selectedUserIdSubject = new BehaviorSubject<string | null>(null);
-  public selectedUserId$ = this.selectedUserIdSubject.asObservable();
+  // Selected user (written by the Users feature, read by the Dashboard feature)
+  private selectedUserSubject = new BehaviorSubject<SelectedUser | null>(null);
+  public selectedUser$ = this.selectedUserSubject.asObservable();
 
   // Application-wide loading state
   private loadingSubject = new BehaviorSubject<boolean>(false);
@@ -23,14 +30,12 @@ export class StateService {
   private sidebarCollapsedSubject = new BehaviorSubject<boolean>(false);
   public sidebarCollapsed$ = this.sidebarCollapsedSubject.asObservable();
 
-  constructor() {}
-
-  setSelectedUserId(userId: string | null): void {
-    this.selectedUserIdSubject.next(userId);
+  setSelectedUser(user: SelectedUser | null): void {
+    this.selectedUserSubject.next(user);
   }
 
-  getSelectedUserId(): string | null {
-    return this.selectedUserIdSubject.value;
+  getSelectedUser(): SelectedUser | null {
+    return this.selectedUserSubject.value;
   }
 
   setLoading(loading: boolean): void {

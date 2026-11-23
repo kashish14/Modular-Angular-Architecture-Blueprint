@@ -4,7 +4,6 @@ export interface User {
   email: string;
   role: string;
   status: 'active' | 'inactive' | 'pending';
-  avatar?: string;
   joinedDate: Date;
   lastActive?: Date;
 }
