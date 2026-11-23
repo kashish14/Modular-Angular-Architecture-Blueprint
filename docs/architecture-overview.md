@@ -184,9 +184,8 @@ Features are **injected into the router outlet** via lazy loading.
 - API layer: HTTP interceptor behavior
 
 ### Architectural Tests
-- Dependency rules enforcement
-- Module boundary validation
-- Circular dependency detection
+- Dependency rules enforcement: `npm run check:boundaries` (`scripts/check-boundaries.mjs`) fails the build if core imports shared/layout/features, shared imports layout/features, or one feature imports another
+- Circular dependency detection (not set up yet; `madge` is a good fit)
 
 ## Migration Path
 

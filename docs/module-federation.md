@@ -2,7 +2,9 @@
 
 ## Overview
 
-**Module Federation** enables independent deployment of feature modules as separate applications that can be loaded dynamically at runtime. This guide explains how to implement Module Federation in this architecture.
+**Module Federation** enables independent deployment of feature modules as separate applications that can be loaded dynamically at runtime. This guide explains how Module Federation could be added to this architecture.
+
+> **Status:** not implemented in this repository. The app ships as a single Angular build with lazy-loaded NgModules; this document is a design guide for extracting those feature modules into remotes later.
 
 ## Why Module Federation?
 
@@ -271,14 +273,14 @@ Without `singleton: true`, you get:
 ### Handling Version Conflicts
 
 **Scenario:**
-- Host: `@angular/core@16.2.0`
-- Remote: `@angular/core@16.2.5`
+- Host: `@angular/core@21.2.0`
+- Remote: `@angular/core@21.2.5`
 
 **With `strictVersion: true`:**
 - ❌ Fails to load (version mismatch)
 
 **With `strictVersion: false`:**
-- ✅ Uses host version (16.2.0)
+- ✅ Uses host version (21.2.0)
 
 **Best Practice:**
 - Keep versions aligned across host/remotes
@@ -387,22 +389,7 @@ Route 10% of users to canary, 90% to stable.
 
 ### Initial Load Time
 
-**Without Module Federation:**
-```
-main.js: 800KB (all features)
-```
-
-**With Module Federation:**
-```
-main.js: 200KB (host + core)
-analytics.js: 150KB (loaded on demand)
-users.js: 120KB (loaded on demand)
-settings.js: 100KB (loaded on demand)
-```
-
-**Time to Interactive:**
-- Without MF: 4.5s
-- With MF: 1.8s (60% faster)
+The main gain is that each remote is built, cached and deployed on its own; the initial download is similar to plain lazy loading, which this repo already uses. Measure with your own bundles before and after.
 
 ### Caching Strategy
 

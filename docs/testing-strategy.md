@@ -152,13 +152,11 @@ describe('User Selection Integration', () => {
     const stateService = TestBed.inject(StateService);
     const usersService = TestBed.inject(UsersService);
     
-    const mockUser = { id: '1', name: 'Test User' };
-    
+    const mockUser = { id: '1', name: 'Test User', email: 'test@example.com', role: 'User', status: 'active' as const, joinedDate: new Date() };
+
     usersService.selectUser(mockUser);
-    
-    stateService.selectedUserId$.subscribe(id => {
-      expect(id).toBe('1');
-    });
+
+    expect(stateService.getSelectedUser()?.id).toBe('1');
   });
 });
 ```
@@ -190,6 +188,8 @@ describe('Cross-Module Communication', () => {
 ---
 
 ## Architectural Testing
+
+This repo enforces the layer rules with a small Node script, `scripts/check-boundaries.mjs`, run via `npm run check:boundaries` (and in CI). The Jest-style examples below show how the same rules could be expressed as tests.
 
 ### Dependency Rule Enforcement
 

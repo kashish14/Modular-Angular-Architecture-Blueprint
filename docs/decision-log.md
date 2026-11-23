@@ -263,7 +263,7 @@ With Module Federation:
 
 #### Option B: Lazy Load Everything ✅ **CHOSEN**
 **Pros:**
-- Small initial bundle (~80KB)
+- Smaller initial bundle (feature code is split out)
 - Fast Time to Interactive
 - Pay-as-you-go loading
 
@@ -289,18 +289,7 @@ With Module Federation:
 - Core Web Vitals improvement (TTI, FCP)
 - Can add preloading for specific routes later
 
-**Performance Impact:**
-```
-Before (Eager):
-- Initial bundle: 1.2MB
-- Time to Interactive: 4.5s
-- Lighthouse score: 65
-
-After (Lazy):
-- Initial bundle: 80KB
-- Time to Interactive: 1.2s
-- Lighthouse score: 95
-```
+**Performance Impact:** see [Bundle Size](#performance-considerations) below for numbers measured from this repo.
 
 **Exception:** Core/Shared are eager (needed immediately)
 
@@ -632,22 +621,18 @@ import { AuthService } from '@core/services/auth.service';
 
 ## Performance Considerations
 
-### Bundle Size Targets
+### Bundle Size
 
-| Metric          | Target | Actual | Status |
-|-----------------|--------|--------|--------|
-| Initial bundle  | <200KB | ~80KB  | ✅      |
-| Core            | <50KB  | ~45KB  | ✅      |
-| Per feature     | <150KB | ~95KB  | ✅      |
-| Total (eager)   | <300KB | ~125KB | ✅      |
+Measured from `npm run build` (production, Angular 21, gzip-estimated transfer size):
 
-### Load Time Targets
+| Chunk              | Raw     | Transfer |
+|--------------------|---------|----------|
+| Initial (eager)    | ~366 KB | ~103 KB  |
+| Users feature      | ~20 KB  | ~5.5 KB  |
+| Analytics feature  | ~9 KB   | ~2.9 KB  |
+| Settings feature   | ~9 KB   | ~2.8 KB  |
 
-| Metric                | Target | Status |
-|-----------------------|--------|--------|
-| First Contentful Paint| <1.5s  | ✅      |
-| Time to Interactive   | <3s    | ✅      |
-| Lighthouse Score      | >90    | ✅      |
+A further ~34 KB chunk (forms + shared components) is shared by the features and loaded with the first one.
 
 ---
 

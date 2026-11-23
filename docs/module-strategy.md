@@ -145,8 +145,7 @@ export class AnalyticsModule { }
 ### Why Lazy Load?
 
 **Performance Benefits:**
-- Initial bundle size: ~200KB → ~80KB
-- Time to Interactive: Improved by 60%
+- Feature code is not in the initial bundle
 - Feature isolation: Only load what user needs
 
 ### Implementation
@@ -197,21 +196,16 @@ RouterModule.forRoot(routes, {
 
 ### Bundle Analysis
 
-**Without Lazy Loading:**
-```
-main.js: 450KB
-vendor.js: 800KB
-Total: 1.25MB
-```
+Measured from `npm run build` (production, Angular 21, gzip-estimated transfer size):
 
-**With Lazy Loading:**
-```
-main.js: 80KB
-vendor.js: 800KB (shared)
-analytics.js: 120KB (loaded on demand)
-users.js: 95KB (loaded on demand)
-settings.js: 75KB (loaded on demand)
-```
+| Chunk              | Raw     | Transfer |
+|--------------------|---------|----------|
+| Initial (eager)    | ~366 KB | ~103 KB  |
+| Users feature      | ~20 KB  | ~5.5 KB  |
+| Analytics feature  | ~9 KB   | ~2.9 KB  |
+| Settings feature   | ~9 KB   | ~2.8 KB  |
+
+A further ~34 KB chunk (forms + shared components) is shared by the features and loaded with the first one.
 
 ---
 
@@ -320,10 +314,10 @@ module.exports = {
 
 **Example Scenario:**
 ```
-Host App: @angular/core@16.2.0
-Remote App: @angular/core@16.2.5
+Host App: @angular/core@21.2.0
+Remote App: @angular/core@21.2.5
 
-Result: Shared singleton at 16.2.0 (host version)
+Result: Shared singleton at 21.2.0 (host version)
 ```
 
 ---
