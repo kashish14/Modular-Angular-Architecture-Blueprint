@@ -1,12 +1,14 @@
 {
-  "name": "enterprise-admin-workspace",
+  "name": "modular-angular-architecture-blueprint",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "check:boundaries": "node scripts/check-boundaries.mjs"
   },
   "private": true,
   "dependencies": {
@@ -34,5 +36,22 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
+  },
+  "overrides": {
+    "@npmcli/package-json": {
+      "glob": "^14.0.6"
+    },
+    "cacache": {
+      "glob": "^14.0.6"
+    },
+    "ignore-walk": {
+      "minimatch": "^11.0.9"
+    },
+    "@tufjs/models": {
+      "minimatch": "^11.0.9"
+    }
   }
 }
